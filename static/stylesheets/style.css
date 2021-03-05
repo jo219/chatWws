@@ -1,0 +1,106 @@
+body{
+    height: 100%;
+    display: grid;
+    grid-template-columns: auto auto;
+    align-content:center; 
+    justify-content: center;
+    /* background-color: lightgrey; */
+    gap: 1em 4em;
+    font-family: 'Roboto', sans-serif;
+    color: white;
+}
+
+h1{
+    font-family:'Trebuchet MS', Helvetica, sans-serif;
+    font-size: 50px;	
+}
+
+/* level 1 div */
+#div-logo           {
+    grid-area: 1 / 1 / 1 / 3; 
+    /* background-color: lightgray; */
+}
+#div-client-lists   {
+    grid-area: 2 / 1 / 2 / 1;
+    height: 22em;
+    width: 12.5em;
+    position: relative;
+}
+#div-connect-menu   {
+    grid-area: 3 / 1 / 3 / 1; 
+    background-color: lightgray;}
+#div-chat-area      {
+    grid-area: 2 / 2 / 4 / 2; 
+    height: 30em;
+    width: 30em;
+    position: relative;
+}
+
+/* level 2 div */
+#listbox-clientlists    {
+    position: absolute 0 0 auto 0;
+    height: 90%;
+    overflow: scroll;
+}
+#div-filter-gender      {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    float: right;
+    background-color: lightgray;}
+
+#h-room-name            {
+    margin: 0.1em 0 0.5em 0; /* t r b l  */
+    text-align: center;
+    color: gray;
+    font-weight: normal;}
+#listbox-chat-area      {
+    position: absolute auto 0 auto 0;
+    padding: 0.2em;
+    height: 75%;
+    overflow: scroll;
+    border: 0.5px solid gray;
+    background-color: whitesmoke;
+}
+#div-chat-input         {
+    position: absolute;
+    bottom: 0;
+    width: 93.5%;
+    padding: 1em;
+}
+
+/* level 3 div */
+.clientlist              {
+    padding: 0.75em 0.75em 1.5em 3.2em;
+    margin: 0 0 0.5em 0;
+    border-radius: 0.2em;	
+    background-color: #2a9df4;}
+
+/* #error-message-connect-menu font {
+    color: #ff0000;
+} */
+
+.chatline               {
+    padding: 0.5em;
+    margin: 0.5em 1em;
+    border-radius: 0.2em;	
+    font-size: 0.95em;
+    background-color: gray;}
+#input-chat-message     {
+    outline: none;  border: none;
+    width: 80%;
+    border-radius: 20px;	
+    padding: 0.5em 1em;
+    background-color: lightgray;}
+#button-send-message    {
+    outline: none;  border: none;
+    border-radius: 20px;	
+    padding: 0.5em 1em;
+    width: 12.5%;
+}
+
+input                   {
+    font-weight: bold;
+}
+.clientlist-Male    {background-color: #2a9df4}
+.clientlist-Female  {background-color: lightpink}

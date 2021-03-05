@@ -1,0 +1,4 @@
+conda activate tf_cuda
+cd "Downloads\08-10 Deployable hopefully"
+python app.py
+

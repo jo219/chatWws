@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+	<!-- <meta name="viewport" content="width=device-width initial-scale=1" /> -->
+    <link rel="stylesheet" href="../static/stylesheets/style.css" />
+    <title>H</title>
+</head>
+
+    <body>
+        <div id="div-logo">
+            <!-- <h1><font style="color:crimson">Apanijing!</font></h1><br> -->
+            <h1><font style="color:crimson">toTalk</font></h1><br>
+        </div>
+        
+        <div id="div-client-lists">
+            <!-- <select name="" class="" size=20 id="listbox-clientlists" onchange="openChatroom()"> </select> -->
+            <div id="listbox-clientlists">
+                <div class="clientlist" id="clientlist-Ando" onclick="test2()">Ando</div>
+                <div class="clientlist" id="clientlist-Andu">Andu</div>
+                <div class="clientlist" id="clientlist-Andi">Andi</div>
+                <div class="clientlist" id="clientlist-Andi">Andi</div>
+                <div class="clientlist" id="clientlist-Andi">Andi</div>
+                <div class="clientlist" id="clientlist-Andi">Andi</div>
+                <div class="clientlist" id="clientlist-Andi">Andi</div>
+                <div class="clientlist" id="clientlist-Andi">Andi</div>
+            </div>
+            <br>
+            <div id="div-filter-gender">
+                <select name="" class="" id="listbox-filter-gender" onchange="clientlistsFilter()">
+                    <option value="All">All</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                </select>
+                <button class="" onclick="clientlistsRefresh()">Refresh</button>
+            </div>
+        </div>
+
+        <div id="div-connect-menu">
+            <input type="text" name="" placeholder="Your name" class="" id="input-username" onkeyup="byReturn(signUp)">
+            <br>
+            <input type="radio" name="gender" value="Male"> M <!-- change to switch soon  -->
+            <input type="radio" name="gender" value="Female"> F
+            <br><br>
+            <button class="" id="button-signup" onclick="signUp()">Go inside</button>
+            <button class="" id="button-signout" onclick="signOut()">Go out</button>
+        </div>
+
+        <div id="div-chat-area">
+            <h4 id="h-room-name">No room entered</h4>
+            <!-- <select id="listbox-chat-area" name="" class="" size=20>
+                <option>Welcome bla bla</option>
+            </select> -->
+            <div id="listbox-chat-area">
+                <div class="chatline">Andi: Chat abc def</div>
+                <div class="chatline">Andi: Chat abc def</div>
+                <div class="chatline">Andi: Chat abc def</div>
+                <div class="chatline">Andi: Chat abc def</div>
+                <div class="chatline">Andi: Chat abc def</div>
+                <div class="chatline">Andi: Chat abc def</div>
+                <div class="chatline">Andi: Chat abc def</div>
+                <div class="chatline">Andi: Chat abc def</div>
+                <div class="chatline">Andi: Chat abc def</div>
+                <div class="chatline">Andi: Chat abc def</div>
+                <div class="chatline">Andi: Chat abc def</div>
+            </div>
+            <br>
+            <div id="div-chat-input">
+                <input type="text" name="" placeholder="Type here to talk to..." class="" id="input-chat-message" onkeyup="byReturn(sendMessage)">
+                <button class="" onclick="sendMessage()" id="button-send-message">Send</button>                    
+            </div>
+        </div>
+<script>
+    function test() {
+        var elem = document.getElementById("listbox-chat-area")
+        elem.scrollTop = elem.scrollHeight
+    }
+    function test2(div) {
+        console.log(div.target.innerHTML)
+    }
+</script>
+    </body>
+
+
+</html>

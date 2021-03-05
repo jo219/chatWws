@@ -1,0 +1,5 @@
+cd flask_test0803/
+. fl_env/bin/activate
+cd Downloads/08-15\ with\ Rabbit/
+FLASK_APP=app.py FLASK_DEBUG=1 python -m flask run
+

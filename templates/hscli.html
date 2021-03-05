@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+	<!-- <meta name="viewport" content="width=device-width initial-scale=1" /> -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='stylesheets/style.css') }}" />
+    <title>H</title>
+</head>
+
+    <body>
+        <div id="div-logo">
+            <h1><font style="color:crimson">Apanijing!</font></h1><br>
+            <!-- <h1><font style="color:crimson">toTalk</font></h1><br> -->
+        </div>
+        
+        <div id="div-client-lists">
+            <div id="listbox-clientlists"></div>
+            <br>
+            <div id="div-filter-gender">
+                <select name="" class="" id="listbox-filter-gender" onchange="clientlistsFilter()">
+                    <option value="All">All</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                </select>
+                <button class="" onclick="clientlistsRefresh()">Refresh</button>
+            </div>
+        </div>
+
+        <div id="div-connect-menu">
+            <input type="text" name="" placeholder="Your name" class="" id="input-username" onkeyup="byReturn(signUp)">
+            <br>
+            <input type="radio" name="gender" value="Male"> Male <!-- change to switch soon  -->
+            <input type="radio" name="gender" value="Female"> Female
+            <br><br>
+            <button class="" id="button-signup" onclick="signUp()">Go inside</button>
+            <button class="" id="button-signout" onclick="signOut()">Go out</button>
+            <br><br>
+            <p id="error-message-connect-menu"></p>
+        </div>
+
+        <div id="div-chat-area">
+            <h4 id="h-room-name">No room entered</h4>
+            <div id="listbox-chat-area"></div>
+            <br>
+            <div id="div-chat-input">
+                <input type="text" name="" placeholder="Type here to talk to..." class="" id="input-chat-message" onkeyup="byReturn(sendMessage)">
+                <button class="" onclick="sendMessage()" id="button-send-message">Send</button>                    
+            </div>
+        </div>
+            
+        
+        <script>
+        	{% if 'username' in session %} 
+            var id_self = "{{ session['username'] }}"
+            // Soon: consider buat nambah cek ids[] buat cek login status
+            // Learn more about session (kalo beda window gmn dsb2), also maybe can get session just by js (jinja free)
+
+            // Disable sending message for more cases (e.g. when no room opened)
+            // Soon: make loading animation for login, logout, refresh
+
+            console.log("you are at signed up as " + id_self)
+            var id_toSend = ''
+
+            var cur_ids = new Array()
+            var cur_ufs = new Array()
+            var listboxClientlist = document.getElementById("listbox-clientlists")
+            var listboxChatArea = document.getElementById("listbox-chat-area")
+
+            byIdDisableChilds("div-connect-menu")
+            document.getElementById("input-username").value = id_self
+        	document.querySelector('input[name="gender"][value="{{ session['gender'] }}"]').checked = true
+            document.getElementById("button-signout").disabled = false
+        	// Consider: add text indicate logged in status
+
+            clientlistsRefresh() // ati2 bikin lambat
+
+            var ws_scheme = ''
+            window.location.protocol=="https:" ? ws_scheme = "wss://" : ws_scheme = "ws://";
+            var ws_url = ws_scheme + window.location.hostname + (window.location.port ? ":" + window.location.port : "") + "/websocket/" + id_self
+            
+            function connectWs() {
+                socket = new WebSocket(ws_url)
+                socket.onopen = function() {
+                    // var cur_msg = {'tag': '{signup}', 'username': id_self}
+                    // socket.send(JSON.stringify(cur_msg))
+                    // socketDbStore()
+                    // setTimeout(function(){ alert("Hello"); }, 3000)
+                }
+
+                socket.onmessage = function(message) {
+                    var cur_msg = JSON.parse(message.data)
+                    if (cur_msg.tag == '{sonein}') {
+                        var filter = document.getElementById("listbox-filter-gender").value
+                        if (filter == 'All' || cur_msg.gender == filter) {
+                            var new_list = document.createElement("DIV")
+                            new_list.appendChild(document.createTextNode(cur_msg.username))
+                            new_list.addEventListener('click', openChatroom)
+                            new_list.id = "clientlist-" + cur_msg.username
+                            new_list.className = "clientlist-" + cur_msg.gender
+                            new_list.classList.add("clientlist")
+                            listboxClientlist.appendChild(new_list)
+                        }
+                    } else if (cur_msg.tag == '{soneout}') {
+                        document.getElementById("clientlist-" + cur_msg.username).remove()
+                    } else if (cur_msg.tag == '{notify}') {
+                        if (cur_msg.fr == id_toSend) {
+                            updateChatroom()
+                        } else {
+                            document.getElementById("clientlist-"+cur_msg.fr).style.color = "#ff0000"
+                        }
+                    } else {
+                        console.log('error: unidentified msg')
+                    }
+                }
+
+                socket.onclose = function(e) {
+                    console.log('Socket is closed. Reconnect will be attempted in 1 second.', e.reason);
+                    setTimeout(function() {
+                    connectWs();
+                    }, 1000);
+                };
+
+                socket.onerror = function(err) {
+                    console.error('Socket encountered error: ', err.message, 'Closing socket');
+                    socket.close();
+                };
+            }
+
+            connectWs();
+
+
+            // Consider: with worker for ajax-based-listeners, replace all socket
+
+            function signOut() { // Soon: call by session end events also (closed tab/window)
+            	console.log("you are going to signed out")
+                
+                var xhttp = new XMLHttpRequest()
+                xhttp.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+                        console.log(this.responseText) // Soon: handling error message also
+			            // await new Promise(r => setTimeout(r, 5000));
+                        location.reload() // Soon: GANTI AJAX, JANGAN ALAY RELOAD2AN
+                        return false;
+                    }
+                }
+                xhttp.open("POST", "/signout", true); // insert URL instead bro... 
+                xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                xhttp.send("username="+id_self);
+            }
+
+            function clientlistsRefresh() { // retrieve cur_ids and cur_ufs, open clientlistsFilter()
+                console.log("refreshing clientlist")
+                
+                var xhttp = new XMLHttpRequest()
+                xhttp.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+                        if (this.responseText == "{fail}") {
+                            console.log("fail to refresh")
+                            return false
+                        }
+                        var resp = JSON.parse(this.responseText)
+                        cur_ids = resp.cur_ids
+                        cur_ufs = resp.cur_ufs
+                        clientlistsFilter()
+                        return false;
+                    }
+                }
+                xhttp.open("POST", "/clientlistsRefresh", true)
+                xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded")
+                xhttp.send("username="+id_self)
+            }
+            function clientlistsFilter() { // unread_flag warnain di sini
+                var filter = document.getElementById("listbox-filter-gender").value
+                listboxClientlist.innerHTML = ''
+                for (var i=0, len=cur_ids.length; i<len; i++) {
+                    if (filter == 'All' || cur_ids[i].gender == filter){
+                        var new_list = document.createElement("DIV")
+                        new_list.appendChild(document.createTextNode(cur_ids[i].username))
+                        new_list.addEventListener('click', openChatroom)
+                        new_list.id = "clientlist-" + cur_ids[i].username
+                        new_list.className = "clientlist-" + cur_ids[i].gender
+                        new_list.classList.add("clientlist")
+                        if (cur_ufs[cur_ids[i].username] == 1){
+                            new_list.style.color = "#ff0000"
+                        } else {
+                            new_list.style.color = "#ffffff"
+                        }
+                        listboxClientlist.appendChild(new_list)
+                    }
+                }
+            }
+
+            function sendMessage() {
+                // updateIdToSend()
+                if (id_toSend == '') {
+                    console.log("fail to send message, no id selected (chatroom opened)")
+                    return false
+                }
+                var vMsg = document.getElementById("input-chat-message")
+                
+                var xhttp = new XMLHttpRequest()
+                xhttp.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+                        if (this.responseText == "{fail}") {
+                            console.log("fail to refresh")
+                            return false
+                        }
+                        var cur_chat = JSON.parse(this.responseText).chatroom
+                        listboxChatArea.innerHTML = ''
+                        for (var i=0, len=cur_chat.length; i<len; i++) {
+                            var new_list = document.createElement("DIV")
+                            new_list.appendChild(document.createTextNode(cur_chat[i]))
+                            new_list.className = "chatline"
+                            listboxChatArea.appendChild(new_list)
+                        }
+                    }
+                }
+                xhttp.open("POST", "/sendMessage", true)
+                xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded")
+                xhttp.send("fr="+id_self+"&to="+id_toSend+"&msg="+vMsg.value)
+                vMsg.value = ''
+            }
+            function updateChatroom() { // Soon: consider to retrieve whole chat in a global variable instead
+                // id_toSend = e.target.innerHTML
+                if (id_toSend == '') {
+                    console.log("fail to open chatroom, no id selected (chatroom opened)") // imposible happen
+                    return false
+                }
+                
+                var xhttp = new XMLHttpRequest()
+                xhttp.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+                        if (this.responseText == "{fail}") {
+                            console.log("fail to refresh")
+                            return false
+                        }
+                        var resp = JSON.parse(this.responseText)
+                        var cur_chat = resp.chatroom
+                        cur_ufs = resp.uf
+                        listboxChatArea.innerHTML = ''
+                        for (var i=0, len=cur_chat.length; i<len; i++) {
+                            var new_list = document.createElement("DIV")
+                            new_list.appendChild(document.createTextNode(cur_chat[i]))
+                            new_list.className = "chatline"
+                            listboxChatArea.appendChild(new_list)
+                            // var new_list = new Option(cur_chat[i], '') // (text, value)
+                            // listboxChatArea.options[listboxChatArea.options.length] = new_list
+                            // add color diferrentiation by sender/receiver
+                        }
+                        listboxChatArea.scrollTop = listboxChatArea.scrollHeight // scroll Chatroom to Bottom
+                        return false
+                    }
+                }
+                xhttp.open("POST", "/openChatroom", true)
+                xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded")
+                xhttp.send("fr="+id_toSend+"&to="+id_self)
+                document.getElementById("h-room-name").innerHTML = "A room with " + id_toSend 
+                document.getElementById("clientlist-"+id_toSend).style.color = "#ffffff"
+            }
+            function openChatroom(cur_div) {
+                id_toSend = cur_div.target.innerHTML
+                updateChatroom()
+                // if (listboxClientlist.selectedIndex == -1) {
+                //     console.log("fail to update id to send")
+                //     return false
+                // }
+                // id_toSend = listboxClientlist.options[listboxClientlist.selectedIndex].id.substr(11)
+            }
+
+            // window.addEventListener("unload", signOut)
+
+        	{% else %}
+        	console.log("you are at else")
+            byIdDisableChilds("div-client-lists")
+            byIdDisableChilds("div-chat-area")
+
+        	document.querySelector('input[name="gender"][value="Male"]').checked = true
+        	document.getElementById("button-signout").disabled = true
+        	// document.getElementById("button-signup").onclick = "signUp()"
+
+            function signUp() {
+            	console.log("you are signing up")
+                var vUsername = document.getElementById("input-username").value
+                // if (document.querySelector('input[name="gender"]:checked') !== null
+                var vGender = document.querySelector('input[name="gender"]:checked').value
+
+                var xhttp = new XMLHttpRequest()
+                xhttp.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+                        console.log(this.responseText) // Soon: handling error message also
+                        if (this.responseText.substr(0,6) == "{fail}") {
+                            console.log(this.responseText)
+                            document.getElementById("error-message-connect-menu").innerHTML = this.responseText.substr(7)
+                            return false
+                        } 
+			            // await new Promise(r => setTimeout(r, 5000));
+                        document.getElementById("error-message-connect-menu").innerHTML = ''
+                        location.reload() // Soon: GANTI AJAX, JANGAN ALAY RELOAD2AN
+                        return false
+                    }
+                }
+                // xhttp.open("GET", "/?host="+vHost+"&port="+vPort, true);
+                // xhttp.send();
+                xhttp.open("POST", "/signup", true)
+                xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded")
+                xhttp.send("username="+vUsername+"&gender="+vGender)
+            }
+            {% endif %}
+
+            function byIdDisableChilds(elementId) {
+                var divContainer = document.getElementById(elementId).getElementsByTagName('*')
+                for (var i=0, len=divContainer.length; i<len; ++i) {
+                    divContainer[i].disabled = true
+        	    }
+            }
+            function byReturn(method) {
+                if (event.keyCode === 13) {
+                    event.preventDefault()
+                    method()                    
+                }
+            }
+            // await new Promise(r => setTimeout(r, 2000));
+            
+        </script>
+
+    </body>
+
+
+</html>
